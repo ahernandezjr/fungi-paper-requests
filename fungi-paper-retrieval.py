@@ -1,13 +1,35 @@
 import requests
 
 # Retrieving genus list
-f = open("genus_final_list.txt", "r")
+def import_init_file(origin_file_name, new_file_name):
+    # Open origin file
+    with open(origin_file_name, mode='r', encoding='utf-8') as origin_file:
+        # Create array of genus in the file
+        origin_array = []
+        for x in origin_file:
+            origin_array.append(x.split(":")[0])
 
-genus_list = []
+    # Copy 'Remainder' file to "/backups/"
 
-for x in f:
-    genus_list.append(x.split(":")[0])
+    # Create new "remainder" file
+    with open(new_file_name, "w") as f:
+        for row in origin_array:
+            f.write(row + "\n")
 
+# def find_ids():
+# https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pmc&term=Amanita&retmax=20000&tool=funguild&email=stbates@purdue.edu
+# File will have an implicit "\n", so use row.strip()
+
+
+import_init_file("genus_final_list.txt", "genus_remainder.txt")
+
+f = open("genus_remainder.txt")
+array = []
+for row in f:
+    array.append(row)
+
+print(array[-1].strip())
+print(len(array))
 
 
 # Request of paper and writing to file
