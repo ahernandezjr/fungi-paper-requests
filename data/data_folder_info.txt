@@ -1,0 +1,3 @@
+This folder will hold folders for ever genus which contains:
+  genus papers
+  genus_index.txt
