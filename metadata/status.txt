@@ -1,2 +1,13 @@
-0
-12314
+TEMPLATE:
+
+0       // Genus Completed
+12314   // Genus Total
+
+Detailed Stats:
+    Aminita:
+    [X] - Index File Status
+    [0] - Paper Retrieval Status
+    0       // Papers Obtained for Genus
+    0       // Papers Total for Genus
+
+    Next Genus:
