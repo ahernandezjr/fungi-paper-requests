@@ -2,7 +2,7 @@ Aabaarnia:1
 Aaosphaeria:10
 Abgliophragma:0
 Abieticola:36
-Abortiporus:0
+Abortiporus:66
 Abrachium:7
 Abropelta:2
 Abrothallus:15
@@ -12312,4 +12312,4 @@ Zymoseptoria:1144
 Zythia:16
 Zythiostroma:10
 Zyxiphora:1
-Total: 3992531
+Total: 3992597

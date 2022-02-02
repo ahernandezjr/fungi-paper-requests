@@ -2,6 +2,7 @@ from posixpath import dirname
 import shutil
 import os
 from time import sleep
+from unittest import skip
 import numpy as np
 import re
 import requests
@@ -11,7 +12,7 @@ import json
 # Retrieving genus list
 # WARNING: Only used the first time
 # @params: data from origin file inserted into new file
-def import_init_list(origin_file_name, new_file_name):
+def generate_job_list(origin_file_name, new_file_name):
     # Open origin file
     origin_array = []
     with open(origin_file_name, mode='r', encoding='utf-8') as origin_file:
@@ -42,7 +43,7 @@ def get_array(file):
 
 # Create index files with ID's for all papers of a genus
 # @params: query = genus-to-be-searched
-def get_ids(query_list):
+def create_indicies(query_list):
     # First and second parts of the url
     BASE_URL1 = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pmc&term='
     BASE_URL2 = '&retmax=1000000'
@@ -130,8 +131,10 @@ def get_index(query):
 
 # Get papers from a list of genuses to be searched
 # @params: query = genus, index_array = list of ID's to get papers from
-def get_papers_from_list(query, index_array):
-    print("This array has a length of " + str(len(index_array)))
+def create_articles_from_array(query, index_array):
+    print(query + " array has a length of " + str(len(index_array)))
+    x = 0
+    skipped_articles = []
 
     # Make Directory if !exists
     filename = "data/" + query + "/"
@@ -144,11 +147,18 @@ def get_papers_from_list(query, index_array):
     search_url = BASE_URL + url_append
 
     # Gets response 
-    response = requests.get(search_url)
+    while True:
+        response = requests.get(search_url)
+        if not 'application/json' in response.headers.get('Content-Type'):
+            break
+        sleep(1)
+    
     root = ET.fromstring(response.text)
 
     # Inner for loop for adding papers from requests
     if(len(index_array) == 1):
+        print("article: 1")
+
         # Determine ID with preference for PMC
         id = None
         pmc = None
@@ -166,41 +176,37 @@ def get_papers_from_list(query, index_array):
         elif(pmid): id = pmid
         elif(doi): id = doi
 
-        # Converting body to proper format
-        text = sanitize_text(ET.tostring(root.find('.//body'), encoding='utf-8', method='text').decode('utf-8'))
-        text = re.sub(r"\s{2,}", " ", text.replace('\n', ' ').replace('\r', ' ').strip())
+        # Stops inputting if article
+        # Checks if the article is pullable or not
+        if(root.find('.//body')):
+            # Converting body to proper format
+            body = sanitize_text(ET.tostring(root.find('.//body'), encoding='utf-8', method='text').decode('utf-8'))
+            text = body
 
-        # Json Array that holds the title, id, and text
-        query_array = {
-            "id": id,
-            "genus": query,
-            "text": text
-        }
+            if(root.find('.//front/article-meta/abstract')):
+                abstract = sanitize_text(ET.tostring(root.find('.//front/article-meta/abstract'), encoding='utf-8', method='text').decode('utf-8'))
+                text = abstract + ' ' + body
 
-        # Creating file
-        with open(dirname + "/" + query + "_" + id + ".json", "w") as f:
-            f.write(json.dumps(query_array, indent=3))
+            # Json Array that holds the title, id, and text
+            query_array = {
+                "id": id,
+                "genus": query,
+                "text": text
+            }
+
+            # Creating file
+            with open(dirname + '/' + query + '_' + id + '.json', 'w', encoding='utf-8') as f:
+                json.dump(query_array, f, indent=3)
+        else:  
+            skipped_articles.append(id)
             
     else:
-        # IMPORTANT --------------------------------------
-
-
-
-
-        # Add situation where this message appears and the front is only seeable:
-        # <!-- The publisher of this article does not allow downloading of the full text in XML form. -->
-        # IDEAS: check length of 'article'
-
-
-
-
-
-        # IMPORTANT --------------------------------------
-
-        x = 0
         for article in root.findall('article'):
-            x+=1
+            with open("temp_article.xml", 'w') as temp_article:
+                temp_article.write(sanitize_text(ET.tostring(article, encoding='utf-8', method='text').decode('utf-8')))
+            x += 1
             print("article: " + str(x))
+
             # Determine ID with preference for PMC
             id = None
             pmc = None
@@ -218,9 +224,19 @@ def get_papers_from_list(query, index_array):
             elif(pmid): id = pmid
             elif(doi): id = doi
 
-            # Converting body to proper format
-            text = sanitize_text(ET.tostring(article.find('./body'), encoding='utf-8', method='text').decode('utf-8'))
-            text = re.sub(r"\s{2,}", " ", text.replace('\n', ' ').replace('\r', ' ').strip())
+            # Stops inputting if article
+            # Checks if the article is pullable or not
+            if(not article.find('./body')):
+                skipped_articles.append(id)
+                continue
+
+            # Converting abstract and body to proper format
+            body = sanitize_text(ET.tostring(article.find('./body'), encoding='utf-8', method='text').decode('utf-8'))
+            text = body
+
+            if(article.find('./front/article-meta/abstract')):
+                abstract = sanitize_text(ET.tostring(article.find('./front/article-meta/abstract'), encoding='utf-8', method='text').decode('utf-8'))
+                text = abstract + ' ' + body 
 
             # Json Array that holds the title, id, and text
             query_array = {
@@ -230,14 +246,48 @@ def get_papers_from_list(query, index_array):
             }
 
             # Creating file
-            with open('article' + str(x) + '.json', 'w', encoding='utf-8') as f:
-                f.write(json.dumps(query_array, indent=3))
-    
-    return
+            with open(dirname + '/' + query + '_' + id + '.json', 'w', encoding='utf-8') as f:
+                json.dump(query_array, f, indent=3)
 
 
+    # Creates the skipped_articles.json file and/or updates itwith open('metadata/skipped_articles.json', 'r') as json_file:
+    # 1: Creates file if doesn't exist,
+    # 2: Reads json from file
+    # 3: Creates new part of json and adds it or updates current 
+    all_json = {}
+    if os.path.isfile('metadata/skipped_articles.json') is False:
+        with open('metadata/skipped_articles.json', 'w') as json_file:
+            json_file.write('{}')
+
+    with open('metadata/skipped_articles.json', 'r') as json_file:
+        all_json = json.load(json_file)
+        # DEBUGGING: print(all_json)
+
+    with open('metadata/skipped_articles.json', 'w') as json_file:
+        if(query in all_json):
+            # DEBUGGING: print(skipped_articles)
+            new_array = all_json[query]
+            for item in skipped_articles:
+                if(item not in new_array):
+                    new_array.append(item)
+            skipped_articles = new_array
+            for key, value in all_json.items():
+                if key == query:
+                    all_json[key] = skipped_articles
+        else:
+            all_json.update({query : skipped_articles})
+        json.dump(all_json,
+            json_file,
+            indent=4,
+        )
+
+
+# Sanitize text from articles into normal text with proper spacing.
+# @params: text = text to be sanitized
 def sanitize_text(text):
-    text = re.sub(r"\s{2,}|(\n+)|(\r+)|(\t+)", " ", text)
+    text = re.sub(r"\s{2,}|(\n+)|(\r+)|(\t+)", " ", text.replace('\n', ' ').replace('\r', ' ').strip())
+    text = text.encode('ascii', 'ignore').decode()
+
     return text
 
 
@@ -246,45 +296,35 @@ def sanitize_text(text):
 # ------------------------------------------------------------
 # ------------------------------------------------------------
 # STEP 1 - Import First List to New List to Count Remainder
-    # import_init_list("metadata/genus_final_list.txt", "metadata/genus_remainder.txt")
+    # generate_job_list("metadata/genus_final_list.txt", "metadata/genus_remainder.txt")
 
 # STEP 2 - Get ID's using list
-    # get_ids(get_array('metadata/genus_remainder.txt'))
+    # create_indicies(get_array('metadata/genus_remainder.txt'))
 
 # OPTIONAL - Generate data from IDs 
-    # compute_total_ids(get_array('metadata/genus_remainder.txt'))
+# compute_total_ids(get_array('metadata/genus_remainder.txt'))
 
+
+# ----------------------
 # STEP 3 - Get Papers from IDs
 
+
 # Outer For Loop for going through the query list
-# for x in range(len(job_array)):
-query_array = []
-with open('metadata/genus_remainder.txt') as f:
-    query_array = f.read().splitlines()
+genus_list = get_array('metadata/genus_remainder.txt')
+for genus in genus_list:
+    # Inner Loop to create articles
+    base_index_array = get_index(genus)
+    index_array = []
 
+    if(len(base_index_array) > 100):
+        for i in range(0, len(base_index_array), 100):
+            create_articles_from_array(genus, base_index_array[i:i+100])
 
-# for query in query_array:
-# query ='aabaarnia'
-query = 'Aaosphaeria'
-get_papers_from_list(query, get_index(query))
+    else:
+        create_articles_from_array(genus, base_index_array)
 
     # query = query_array.pop(0)
-
-
-    # If less than 100 ID's, request once
-    # ADD ------ IF only 1 article, it needs to be a level higher
     
-
-    # else:
-    #     for x in index_array:
-    #         response = requests.get()
-    #         file.write(response.text)
-    #         file.close("test.xml")
-    
-    
-        # Search for articles with item
-        # Check how many ids are in item index
-
         
     # ENABLE ONCE DONE TESTING
     # Re-writes the job_file to update it
