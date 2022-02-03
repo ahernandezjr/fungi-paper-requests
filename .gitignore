@@ -1,1 +1,11 @@
 data/
+metadata/genus_remainder.txt
+metadata/skipped_articles.json
+metadata/status.txt
+metadata/index_log.txt
+metadata/index_log.log
+temp_article.xml
+temp.xml
+test_article.txt
+text.json
+text.xml

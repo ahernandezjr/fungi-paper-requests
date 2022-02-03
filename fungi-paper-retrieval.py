@@ -1,6 +1,7 @@
 from posixpath import dirname
 import shutil
 import os
+import copy
 from time import sleep
 from unittest import skip
 import numpy as np
@@ -43,7 +44,7 @@ def get_array(file):
 
 # Create index files with ID's for all papers of a genus
 # @params: query = genus-to-be-searched
-def create_indicies(query_list):
+def create_indicies(query_list, directory='data/'):
     # First and second parts of the url
     BASE_URL1 = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pmc&term='
     BASE_URL2 = '&retmax=1000000'
@@ -54,7 +55,7 @@ def create_indicies(query_list):
         query = query.strip()
 
         # Make Directory if !exists
-        filename = "data/" + query + "/"
+        filename = directory + query + "/"
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
@@ -86,9 +87,9 @@ def create_indicies(query_list):
             id_count = root.find('Count').text
             print(f"Obtained {id_count} ID's for {query}")
             if (id_count.encode('utf-8') == b'0'):
-                with open("metadata/index_log.txt", "a+") as index_log:
-                    if (f"No ID results for: {query}\n" not in index_log):
-                        index_log.write(f"No ID results for: {query}\n")
+                with open("metadata/index_log.log", "a+") as index_log:
+                    if (f"{query}:No Results Found\n" not in index_log):
+                        index_log.write(f"{query}:No Results Found\n")
                 continue
 
             for id in root.findall('IdList/Id'):
@@ -97,14 +98,14 @@ def create_indicies(query_list):
 
 # Compute total number of IDs found for data analysis
 # @params: genus_list = list of the genus to view index files
-def compute_total_ids(genus_array):
+def compute_total_ids(genus_array, directory='data/'):
     # Variable for sum
     total = 0
 
     with open('metadata/genus_id_totals.txt', 'w') as id_file:
         for genus in genus_array:
             # Gets file location of index for genus
-            filename = 'data/' + genus + '/'
+            filename = directory + genus + '/'
             dirname = os.path.dirname(filename)
 
             # Gets total ID's in file and does calculations and writing to total file
@@ -117,8 +118,8 @@ def compute_total_ids(genus_array):
 
 # Gets index of a genus from its folder/file
 # @params: query_list = list of genuses (queries)) to be searched and data pulled
-def get_index(query):
-    filename = 'data/' + query + '/'
+def get_index(query, directory='data/'):
+    filename = directory + query + '/'
     dirname = os.path.dirname(filename)
     index_file_location = dirname + '/' + query + '_index.txt'
 
@@ -131,13 +132,12 @@ def get_index(query):
 
 # Get papers from a list of genuses to be searched
 # @params: query = genus, index_array = list of ID's to get papers from
-def create_articles_from_array(query, index_array):
-    print(query + " array has a length of " + str(len(index_array)))
+def create_articles_from_array(query, index_array, directory='data/'):
     x = 0
     skipped_articles = []
 
     # Make Directory if !exists
-    filename = "data/" + query + "/"
+    filename = directory + query + "/"
     dirname = os.path.dirname(filename)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
@@ -157,7 +157,8 @@ def create_articles_from_array(query, index_array):
 
     # Inner for loop for adding papers from requests
     if(len(index_array) == 1):
-        print("article: 1")
+        # DEGUGGINS:
+        # print("article: 1")
 
         # Determine ID with preference for PMC
         id = None
@@ -204,8 +205,10 @@ def create_articles_from_array(query, index_array):
         for article in root.findall('article'):
             with open("temp_article.xml", 'w') as temp_article:
                 temp_article.write(sanitize_text(ET.tostring(article, encoding='utf-8', method='text').decode('utf-8')))
-            x += 1
-            print("article: " + str(x))
+
+            # DEBUGGING:
+            # x += 1
+            # print("article: " + str(x))
 
             # Determine ID with preference for PMC
             id = None
@@ -290,47 +293,127 @@ def sanitize_text(text):
 
     return text
 
+# Checks whether two lists have a common element
+# @params: two lists
+def common_data(list1, list2):
+    result = False
+  
+    # traverse in the 1st list
+    for x in list1:
+  
+        # traverse in the 2nd list
+        for y in list2:
+    
+            # if one common
+            if x == y:
+                result = True
+                return result 
+                  
+    return result
 
+def generate_status_report(file):
+    origin_genus_file = 'metadata/genus_id_totals.txt'
+    origin_genus_list = get_array(origin_genus_file)
+
+    genus_file = 'metadata/genus_remainder.txt'
+    genus_list = get_array(genus_file)
+
+    with open('metadata/status.txt', 'w') as f:
+        f.write('---TEMPLATE:---\n')
+        f.write('Genus Completed: ' + str(len(origin_genus_list) - len(genus_list)) + '/' + str(len(origin_genus_list)) + '\n')
+        f.write('Next Genus: ' + genus_list[0] + '\n\n')
+        f.write('Detailed List:\n')
+
+        for i in origin_genus_list[:(len(origin_genus_list) - len(genus_list))]:
+            f.write('[X] - ' + i + '\n')
+        for i in origin_genus_list[(len(origin_genus_list) - len(genus_list)):]:
+            f.write('[ ] - ' + i + '\n')
 
 
 # ------------------------------------------------------------
+
+# Allow for modular data directory selection
+# base_directory = 'D:/repos/fungi-paper-requests/'
+origin_genus_file = 'metadata/genus_id_totals.txt'
+genus_file = 'metadata/genus_remainder.txt'
+
+directory = 'E:/fungidata/'
+# dirname = os.path.dirname(filename)
+# if not os.path.exists(dirname):
+#     os.makedirs(dirname)
+
 # ------------------------------------------------------------
 # STEP 1 - Import First List to New List to Count Remainder
-    # generate_job_list("metadata/genus_final_list.txt", "metadata/genus_remainder.txt")
+# generate_job_list(origin_genus_file, genus_file)
 
 # STEP 2 - Get ID's using list
-    # create_indicies(get_array('metadata/genus_remainder.txt'))
+# create_indicies(get_array('metadata/genus_remainder.txt'), directory)
 
 # OPTIONAL - Generate data from IDs 
-# compute_total_ids(get_array('metadata/genus_remainder.txt'))
+# compute_total_ids(get_array('metadata/genus_remainder.txt'), directory)
 
-
-# ----------------------
 # STEP 3 - Get Papers from IDs
-
-
 # Outer For Loop for going through the query list
-genus_list = get_array('metadata/genus_remainder.txt')
+origin_genus_list = get_array(origin_genus_file)
+genus_list = get_array(genus_file)
+genus_list_copy = copy.deepcopy(genus_list)
 for genus in genus_list:
     # Inner Loop to create articles
-    base_index_array = get_index(genus)
-    index_array = []
+    print(genus + ': REQUESTS STARTED')
+    base_index_array = get_index(genus, directory)
 
-    if(len(base_index_array) > 100):
-        for i in range(0, len(base_index_array), 100):
-            create_articles_from_array(genus, base_index_array[i:i+100])
-
-    else:
-        create_articles_from_array(genus, base_index_array)
-
-    # query = query_array.pop(0)
+    # Check if already completed
+    skipped_json = []
+    with open('metadata/skipped_articles.json', 'r') as json_file:
+        all_json = json.load(json_file)
     
-        
-    # ENABLE ONCE DONE TESTING
-    # Re-writes the job_file to update it
-    # with open(job_list, 'w') as f:
-    #     f.writelines(job_array)
+    if(genus in all_json):
+        for key, value in all_json.items():
+            if key == genus:
+                skipped_json = all_json[key]
 
+    # ( len(os.listdir(directory + genus + "/") - 1) >= (len(base_index_array) ) * .8 ) and 
+    if( (len(os.listdir(directory + genus + "/")) - 1) == (len(base_index_array) - len(skipped_json)) ):
+        print(genus + ': ALREADY COMPLETED')
+        print('-----------------------')
 
-# ------------------------------------------------------------
+        genus_list_copy.pop(0)
+        with open(genus_file, 'w') as f:
+            f.writelines('\n'.join(genus_list_copy))
+    
+        generate_status_report('metadata/status.txt')
+     
+        continue
+    
+    
+    # Start of requesting
+    # If the index has more than 100 IDs, do multiple requests
+    if(len(base_index_array) > 100):
+        sum = 0
+        for i in range(0, len(base_index_array), 100):
+            testing_array = base_index_array[i:i+100]
+            sum += len(testing_array)
+
+            if(common_data(testing_array, skipped_json)):
+                print('Status of ' + genus + ': ' + str(sum) + '/' + str(len(base_index_array)) + ' already downloaded...')
+                continue
+
+            print('Status of ' + genus + ': ' + str(sum) + '/' + str(len(base_index_array)))
+            create_articles_from_array(genus, testing_array, directory)
+    # If the index has less than 100 IDs, do one request
+    else:
+        total = len(base_index_array)
+        print('Status of ' + genus + ': ' + str(total) +'/' + str(total))
+        create_articles_from_array(genus, base_index_array, directory)
+
+    # Re-writes job list with completed genus and updates status
+    print(genus + ': REQUESTS COMPLETED')
+    print('-----------------------')
+
+    genus_list_copy.pop(0)
+    with open(genus_file, 'w') as f:
+        f.writelines('\n'.join(genus_list_copy))
+
+    generate_status_report('metadata/status.txt')
+
 # ------------------------------------------------------------
