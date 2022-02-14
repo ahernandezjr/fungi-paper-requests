@@ -151,7 +151,11 @@ def create_articles_from_array(query, index_array, directory='data/'):
         response = requests.get(search_url)
         if not 'application/json' in response.headers.get('Content-Type'):
             break
+        print('DELAYING REQUEST...')
         sleep(1)
+    
+    with open("temp_article.xml", 'w') as temp_article:
+        temp_article.write(response.text)
     
     root = ET.fromstring(response.text)
 
@@ -258,15 +262,21 @@ def create_articles_from_array(query, index_array, directory='data/'):
     # 2: Reads json from file
     # 3: Creates new part of json and adds it or updates current 
     all_json = {}
-    if os.path.isfile('metadata/skipped_articles.json') is False:
-        with open('metadata/skipped_articles.json', 'w') as json_file:
+    skipped_file = 'metadata/skipped_articles.json'
+
+
+    if os.path.isfile(skipped_file) is False:
+        with open(skipped_file, 'w') as json_file:
             json_file.write('{}')
 
-    with open('metadata/skipped_articles.json', 'r') as json_file:
+    destination = 'backups/' + skipped_file.split('/')[1]
+    shutil.copy(skipped_file, destination)
+
+    with open(skipped_file, 'r') as json_file:
         all_json = json.load(json_file)
         # DEBUGGING: print(all_json)
 
-    with open('metadata/skipped_articles.json', 'w') as json_file:
+    with open(skipped_file, 'w') as json_file:
         if(query in all_json):
             # DEBUGGING: print(skipped_articles)
             new_array = all_json[query]
@@ -338,6 +348,8 @@ origin_genus_file = 'metadata/genus_id_totals.txt'
 genus_file = 'metadata/genus_remainder.txt'
 
 directory = 'E:/fungidata/'
+
+request_quantity = 50
 # dirname = os.path.dirname(filename)
 # if not os.path.exists(dirname):
 #     os.makedirs(dirname)
@@ -374,7 +386,10 @@ for genus in genus_list:
 
     # ( len(os.listdir(directory + genus + "/") - 1) >= (len(base_index_array) ) * .8 ) and 
     if( (len(os.listdir(directory + genus + "/")) - 1) == (len(base_index_array) - len(skipped_json)) ):
-        print(genus + ': ALREADY COMPLETED')
+        if(len(base_index_array) == 0):
+            print(genus + ': NO ASSOCIATED IDS')
+        else:
+            print(genus + ': ALREADY COMPLETED')
         print('-----------------------')
 
         genus_list_copy.pop(0)
@@ -382,16 +397,15 @@ for genus in genus_list:
             f.writelines('\n'.join(genus_list_copy))
     
         generate_status_report('metadata/status.txt')
-     
         continue
     
     
     # Start of requesting
     # If the index has more than 100 IDs, do multiple requests
-    if(len(base_index_array) > 100):
+    if(len(base_index_array) > request_quantity):
         sum = 0
-        for i in range(0, len(base_index_array), 100):
-            testing_array = base_index_array[i:i+100]
+        for i in range(0, len(base_index_array), request_quantity):
+            testing_array = base_index_array[i:i+request_quantity]
             sum += len(testing_array)
 
             if(common_data(testing_array, skipped_json)):

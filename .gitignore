@@ -1,4 +1,5 @@
 data/
+metadata_copy/
 metadata/genus_remainder.txt
 metadata/skipped_articles.json
 metadata/status.txt
