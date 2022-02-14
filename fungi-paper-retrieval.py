@@ -317,8 +317,7 @@ def common_data(list1, list2):
             # if one common
             if x == y:
                 result = True
-                return result 
-                  
+                return result            
     return result
 
 def generate_status_report(file):
@@ -366,7 +365,6 @@ request_quantity = 50
 
 # STEP 3 - Get Papers from IDs
 # Outer For Loop for going through the query list
-origin_genus_list = get_array(origin_genus_file)
 genus_list = get_array(genus_file)
 genus_list_copy = copy.deepcopy(genus_list)
 for genus in genus_list:
