@@ -55,7 +55,7 @@ unrelated_json = []
 with open(unrelated_file, 'r') as json_file:
     unrelated_json = json.load(json_file)
 
-# Transfer
+# Transfer for NCBI pulled articles
 for item in base_array:
     print('------------------')
 
@@ -73,7 +73,7 @@ for item in base_array:
                 id_file_name = item + '_' + id + '.json'
 
                 # Makes item directory if nonexistant
-                new_item_directory = destination_directory + file_addition
+                new_item_directory = destination_directory
                 dirname = os.path.dirname(new_item_directory)
                 if not os.path.exists(dirname):
                     os.makedirs(dirname)
@@ -88,3 +88,5 @@ for item in base_array:
     base_array_copy.pop(0)
     with open(job_file, 'w') as f:
         f.writelines('\n'.join(base_array_copy))
+    
+    shutil.copy(job_file, "backups/" + job_file.split('/')[1])
