@@ -5,7 +5,7 @@ import numpy as np
 import shutil
 import json
 
-def generate_job_list(origin_file_name, new_file_name, filer_json):
+def generate_job_list(origin_file_name, new_file_name):
     # Open origin file
     origin_array = []
     with open(origin_file_name, mode='r', encoding='utf-8') as origin_file:
@@ -40,19 +40,19 @@ destination_directory = 'E:/fungitest/'
 
 # File names used for operations
 origin_genus_file = 'metadata/genus_id_totals.txt'
-unrelated_file = 'metadata/unrelated_articles.json'
+unrelated_ncbi_file = 'metadata/unrelated_articles_ncbi.json'
 job_file = 'metadata/transfer_data_job.txt'
 
 # Step 1: Generate list
 # if os.path.isfile(job_file) is False:  
-generate_job_list(origin_genus_file, job_file, unrelated_file)
+generate_job_list(origin_genus_file, job_file)
 
 base_array = get_array(job_file)
 base_array_copy = copy.deepcopy(base_array)
 job_array = []
 unrelated_json = []
 
-with open(unrelated_file, 'r') as json_file:
+with open(unrelated_ncbi_file, 'r') as json_file:
     unrelated_json = json.load(json_file)
 
 # Transfer for NCBI pulled articles
