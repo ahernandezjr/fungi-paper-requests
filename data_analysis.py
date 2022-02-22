@@ -68,10 +68,17 @@ def get_unrelated_id(file):
         mode = 1
     
     if (mode==1):
+        temp_dir = os.listdir(directory)
+        progress_bar(temp_dir.index(file), len(temp_dir))
+        
+        
         # 'genus' changes depending on if ncbi or wiki
         json_data = {}
         with open(directory + file, mode='r', encoding='utf-8') as f:
-            json_data = json.load(f)
+            try:
+                json_data = json.load(f)
+            except Exception:
+                return
 
         if not any( (word.casefold() in json_data[0]['text'].casefold()) for word in required_words ):
             # print(article_id)
@@ -99,13 +106,14 @@ def get_unrelated_id(file):
 def get_ncbi_data(array, total_articles_count, unrelated_article_count):
     pool = Pool(16)
     for genus in array:
-        unrelated_articles = []
+        progress_bar(array.index(genus) + 1, len(array))
+        unrelated_articles = {}
 
-        print('-----------------------------')
-        print(genus + ' Data:')
+        # print('-----------------------------')
+        # print(genus + ' Data:')
 
         total_articles_count += len(os.listdir(directory + genus + "/")) - 1
-        print('Total Articles: ' + str(total_articles_count))
+        # print('Total Articles: ' + str(total_articles_count))
         
         # Loop process to get totals and IDs
         # get_unrelated_ids(For every item in os.listdir) and return x if x is not empty
@@ -113,8 +121,8 @@ def get_ncbi_data(array, total_articles_count, unrelated_article_count):
 
         unrelated_article_count += len(unrelated_articles)
 
-        print('Unrelated Articles: ' + str(len(unrelated_articles)))
-        print('\tTotal: ' + str(unrelated_article_count))
+        # print('Unrelated Articles: ' + str(len(unrelated_articles)))
+        # print('\tTotal: ' + str(unrelated_article_count))
 
         update_json(unrelated_articles, genus, '_ncbi')
 
@@ -142,7 +150,8 @@ def get_wiki_data(total_articles_count, unrelated_article_count):
 
     update_json(unrelated_articles, 'all', '_wiki')
 
-
+# Simple progress bar to show data
+# @params: current = numerator, total = denominator
 def progress_bar(current, total, bar_length = 20):
     percent = float(current) * 100 / total
     arrow   = '-' * int(percent/100 * bar_length - 1) + '>'
@@ -176,12 +185,6 @@ if __name__ == '__main__':
     # with open(data_analysis_file_ncbi, mode='w') as f:
     #     f.write('Total Articles: ' + str(total_articles_count_ncbi) + '\n' + 'Unrelated Articles: ' + str(unrelated_article_count_ncbi) + '\n')
 
-    # i = 0
-    # print('Sanitizing documents: ')
-    # for file in os.listdir(directory):
-    #     progress_bar(i, len(os.listdir()))
-    #     sanitize_documents(file)
-    #     i += 1
 
     get_wiki_data(total_articles_count_wiki, unrelated_article_count_wiki)
 
