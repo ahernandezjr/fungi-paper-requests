@@ -89,7 +89,7 @@ def transfer_wiki_papers(unrelated_file):
 
     all_files = os.listdir(base_directory)
     for index, file_name in enumerate(all_files):
-        progress_bar(index, len(all_files))
+        progress_bar(index + 1, len(all_files))
 
         if (file_name not in unrelated_articles):
             # Creates copies of id's based on unrelated articles
@@ -127,8 +127,4 @@ unrelated_file_wiki = 'metadata/unrelated_articles_wiki.json'
 
 # Step 2: Run based on job list
 # transfer_ncbi_papers(unrelated_file_ncbi, job_file_ncbi)
-
-
-# Wiki
-# Run based on unrelated_ids: Generate list
-transfer_wiki_papers(unrelated_file_wiki)
+# transfer_wiki_papers(unrelated_file_wiki)
