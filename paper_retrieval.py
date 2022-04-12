@@ -1,10 +1,9 @@
-from posixpath import dirname
-import shutil
 import os
-import copy
+from posixpath import dirname
 from time import sleep
-from unittest import skip
+import shutil
 import numpy as np
+import copy
 import re
 import requests
 import xml.etree.ElementTree as ET

@@ -109,18 +109,17 @@ def get_ncbi_data(array, total_articles_count, unrelated_article_count):
         progress_bar(array.index(genus) + 1, len(array))
         unrelated_articles = {}
 
-        # print('-----------------------------')
-        # print(genus + ' Data:')
-
         total_articles_count += len(os.listdir(directory + genus + "/")) - 1
-        # print('Total Articles: ' + str(total_articles_count))
         
         # Loop process to get totals and IDs
-        # get_unrelated_ids(For every item in os.listdir) and return x if x is not empty
         unrelated_articles = list([ x for x in pool.map(get_unrelated_id, os.listdir(directory + genus + "/")) if x is not None])
 
         unrelated_article_count += len(unrelated_articles)
 
+        # Debugging
+        # print('-----------------------------')
+        # print(genus + ' Data:')
+        # print('Total Articles: ' + str(total_articles_count))
         # print('Unrelated Articles: ' + str(len(unrelated_articles)))
         # print('\tTotal: ' + str(unrelated_article_count))
 
@@ -130,25 +129,27 @@ def get_ncbi_data(array, total_articles_count, unrelated_article_count):
     pool.join()
 
 
+# Loops through an array and gets corresponding files using the get_unrelated_ids and adds to json with update_json
+# @params: array = base array for data, total_articles_count = gets the updated amount of articles, unrelated_article_count = gets the updated amount of articles that are unrelated
 def get_wiki_data(total_articles_count, unrelated_article_count):
     unrelated_articles = []
 
-    print('-----------------------------')
-    print('Wiki Data:')
-
     total_articles_count = len(os.listdir(directory))
-    print('Total Articles: ' + str(total_articles_count))
     
     # Loop process to get totals and IDs
-    # get_unrelated_ids(For every item in os.listdir) and return x if x is not empty
     unrelated_articles = list([ x for x in map(get_unrelated_id, os.listdir(directory)) if x is not None])
 
     unrelated_article_count += len(unrelated_articles)
 
-    print('Unrelated Articles: ' + str(len(unrelated_articles)))
-    print('\tTotal: ' + str(unrelated_article_count))
+    # Debugging
+    # print('-----------------------------')
+    # print('Wiki Data:')
+    # print('Total Articles: ' + str(total_articles_count))
+    # print('Unrelated Articles: ' + str(len(unrelated_articles)))
+    # print('\tTotal: ' + str(unrelated_article_count))
 
     update_json(unrelated_articles, 'all', '_wiki')
+
 
 # Simple progress bar to show data
 # @params: current = numerator, total = denominator
@@ -180,16 +181,20 @@ unrelated_article_count_wiki = 0
 
 # Main function - only activates within main thread (to prevent multi-threading recursion)
 if __name__ == '__main__':
-    # get_ncbi_data(get_array(origin_genus_file), total_articles_count_ncbi, unrelated_article_count_ncbi)
 
-    # with open(data_analysis_file_ncbi, mode='w') as f:
-    #     f.write('Total Articles: ' + str(total_articles_count_ncbi) + '\n' + 'Unrelated Articles: ' + str(unrelated_article_count_ncbi) + '\n')
+    # Optional Processes:
+    # 1:
+    get_ncbi_data(get_array(origin_genus_file), total_articles_count_ncbi, unrelated_article_count_ncbi)
 
+        # 2:
+        # with open(data_analysis_file_ncbi, mode='w') as f:
+        #     f.write('Total Articles: ' + str(total_articles_count_ncbi) + '\n' + 'Unrelated Articles: ' + str(unrelated_article_count_ncbi) + '\n')
 
-    get_wiki_data(total_articles_count_wiki, unrelated_article_count_wiki)
+        # 3:
+        # get_wiki_data(total_articles_count_wiki, unrelated_article_count_wiki)
 
-    with open(data_analysis_file_wiki, mode='w') as f:
-        f.write('Total Articles: ' + str(total_articles_count_wiki) + '\n' + 'Unrelated Articles: ' + str(unrelated_article_count_wiki) + '\n')
+        # 4:
+        # with open(data_analysis_file_wiki, mode='w') as f:
+        #     f.write('Total Articles: ' + str(total_articles_count_wiki) + '\n' + 'Unrelated Articles: ' + str(unrelated_article_count_wiki) + '\n')
 
-
-    # print(total_articles_count)
+        # print(total_articles_count)
