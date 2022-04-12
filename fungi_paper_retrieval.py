@@ -327,7 +327,7 @@ def generate_status_report(file):
     genus_file = 'metadata/genus_remainder.txt'
     genus_list = get_array(genus_file)
 
-    with open('metadata/status.txt', 'w') as f:
+    with open('metadata/article_pulling_status.txt', 'w') as f:
         f.write('---TEMPLATE:---\n')
         f.write('Genus Completed: ' + str(len(origin_genus_list) - len(genus_list)) + '/' + str(len(origin_genus_list)) + '\n')
         f.write('Next Genus: ' + genus_list[0] + '\n\n')
@@ -394,7 +394,7 @@ for genus in genus_list:
         with open(genus_file, 'w') as f:
             f.writelines('\n'.join(genus_list_copy))
     
-        generate_status_report('metadata/status.txt')
+        generate_status_report('metadata/article_pulling_status.txt')
         continue
     
     
@@ -426,6 +426,6 @@ for genus in genus_list:
     with open(genus_file, 'w') as f:
         f.writelines('\n'.join(genus_list_copy))
 
-    generate_status_report('metadata/status.txt')
+    generate_status_report('metadata/article_pulling_status.txt')
 
 # ------------------------------------------------------------

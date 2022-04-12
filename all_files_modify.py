@@ -126,12 +126,12 @@ def create_guilds_texts(start_directory, end_directory, request_url):
         progress_bar(index + 1, len(all_files))
 
     
-    no_result_file = 'no_results_file.txt'
+    no_result_file = 'guild_no_results_file.txt'
     with open(no_result_file, 'w') as f:
         for key in no_genus_to_guild:
             f.write(key + '\n')
     
-    result_file = 'results_file.txt'
+    result_file = 'guild_results_file.txt'
     with open(result_file, 'w') as f:
         for key in genus_to_guild:
             f.write(key + '\n')
