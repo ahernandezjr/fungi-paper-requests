@@ -11,7 +11,7 @@ Script to retrieve related papers to fungi (or any other list of query terms). T
 
   This repository was created and is maintained by Alexander Hernandez Jr and is intended to become a free-use, article-pulling tool to obtain data from NCBI in an easy way with just a few modifications.
 
----
+---------------------------
 
   Type: Python Script
   
@@ -30,7 +30,7 @@ Script to retrieve related papers to fungi (or any other list of query terms). T
 
   }
   
----
+---------------------------
 
   Dependencies: {
 
@@ -58,7 +58,7 @@ Script to retrieve related papers to fungi (or any other list of query terms). T
 
   }
 
----
+---------------------------
 
   Output Files: {
 
