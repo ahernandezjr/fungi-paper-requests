@@ -5,14 +5,13 @@ Script to retrieve related papers to fungi (or any other list of query terms). T
 
   The articles are filtered under their genus name and eventually changed to their 'guild' name to better correspond functionality for later analysis.
 
-  Articles begin in the JSON format for readability, but later changed to CSV for better processing after separation into 'token',
-    which are identified by a Machine Learning algorithm focused on the concept Natural Language Processing.
+  Articles begin in the JSON format for readability, but later changed to CSV for better processing after separation into 'tokens', which are identified by a Machine Learning algorithm focused on the concept Natural Language Processing.
 
   This research is sanctioned and funded by Purdue under professors Dr. Scott Bates and Dr. Ricardo Calix.
 
-  This repository was created and is maintained by Alexander Hernandez Jr and is intended to become a free-use, article-pulling tool to obtain 
-    data from NCBI in an easy way with just a few modifications.
+  This repository was created and is maintained by Alexander Hernandez Jr and is intended to become a free-use, article-pulling tool to obtain data from NCBI in an easy way with just a few modifications.
 
+---
 
   Type: Python Script
   
@@ -31,6 +30,7 @@ Script to retrieve related papers to fungi (or any other list of query terms). T
 
   }
   
+---
 
   Dependencies: {
 
@@ -58,7 +58,8 @@ Script to retrieve related papers to fungi (or any other list of query terms). T
 
   }
 
-  
+---
+
   Output Files: {
 
     "article_pulling_status.txt"    - status file for article pulling for fungi-paper-retrieval.py,
